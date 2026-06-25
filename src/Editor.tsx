@@ -6,10 +6,11 @@ import { PixelImage, RGBA } from "./lib/types";
 import { cloneImage, drawLine, floodFill, pickColor, TRANSPARENT } from "./lib/edit";
 import { History, createHistory, commit, undo, redo, canUndo, canRedo } from "./lib/history";
 import { screenToCell, inBounds, fitScale } from "./lib/viewport";
-import { renderEditor, toPngBytes } from "./lib/canvas";
+import { renderEditor, toPngBytes, buildIcoBytes } from "./lib/canvas";
 import { scaleNearest } from "./lib/convert";
 import { exportFileName } from "./lib/io";
 import { NAMED_PALETTES } from "./lib/palettes";
+import { ICON_SIZES } from "./lib/ico";
 
 type Tool = "pen" | "eraser" | "bucket" | "eyedropper";
 
@@ -152,6 +153,21 @@ export default function Editor({
     }
   }, [image, exportScale, baseName]);
 
+  const onExportIco = useCallback(async () => {
+    try {
+      const bytes = await buildIcoBytes(image, ICON_SIZES);
+      const path = await save({
+        defaultPath: exportFileName(baseName, 1, "ico"),
+        filters: [{ name: "アイコン", extensions: ["ico"] }],
+      });
+      if (!path) return;
+      await writeFile(path, bytes);
+      setStatus(`アイコン書き出し完了: ${path}`);
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : String(err));
+    }
+  }, [image, baseName]);
+
   const tools: { id: Tool; label: string; icon: string }[] = useMemo(
     () => [
       { id: "pen", label: "ペン", icon: "✏️" },
@@ -259,6 +275,9 @@ export default function Editor({
             </div>
             <button className="btn btn--primary" onClick={onExport}>
               PNGで書き出し
+            </button>
+            <button className="btn btn--ghost btn--sm" onClick={onExportIco}>
+              アイコン(.ico)で書き出し
             </button>
           </section>
 

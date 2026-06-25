@@ -269,6 +269,110 @@ body {
   color: var(--accent);
 }
 
+.app__home {
+  width: auto;
+}
+
+/* ===== ホーム ===== */
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 36px;
+  padding: 24px;
+}
+.home__hero {
+  text-align: center;
+}
+.home__title {
+  font-size: 30px;
+  margin: 0 0 8px;
+}
+.home__sub {
+  color: var(--muted);
+  margin: 0;
+}
+.home__cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.home-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 240px;
+  padding: 28px 20px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.home-card:hover {
+  border-color: var(--accent-2);
+  transform: translateY(-2px);
+}
+.home-card__icon {
+  font-size: 40px;
+}
+.home-card__title {
+  font-size: 17px;
+  font-weight: 600;
+}
+.home-card__desc {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.newcanvas {
+  width: 340px;
+  padding: 24px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.newcanvas h2 {
+  margin: 0 0 18px;
+  font-size: 16px;
+}
+.newcanvas__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.newcanvas__row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted);
+  flex: 1;
+}
+.newcanvas__row input {
+  padding: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+}
+.newcanvas__x {
+  padding-bottom: 8px;
+  color: var(--muted);
+}
+.newcanvas__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 /* ===== エディタ ===== */
 .editor {
   display: flex;

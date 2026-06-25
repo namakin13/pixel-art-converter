@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { PixelImage, RGBA, createImage, getPixel, setPixel } from "./types";
-import { paintPixel, drawLine, floodFill, pickColor, cloneImage, TRANSPARENT } from "./edit";
+import { paintPixel, drawLine, floodFill, pickColor, cloneImage, createCanvas, TRANSPARENT } from "./edit";
 
 const RED: RGBA = { r: 255, g: 0, b: 0, a: 255 };
 const BLUE: RGBA = { r: 0, g: 0, b: 255, a: 255 };
@@ -75,6 +75,27 @@ describe("floodFill", () => {
   it("透明領域を色で塗れる", () => {
     const out = floodFill(createImage(2, 2), 0, 0, RED);
     for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) expect(getPixel(out, x, y)).toEqual(RED);
+  });
+});
+
+describe("createCanvas", () => {
+  it("bg=null は全透明", () => {
+    const img = createCanvas(3, 2, null);
+    expect(img.width).toBe(3);
+    expect(img.height).toBe(2);
+    for (let i = 0; i < 6; i++) expect(img.data[i * 4 + 3]).toBe(0);
+  });
+
+  it("色を指定すると全面塗りつぶし", () => {
+    const img = createCanvas(2, 2, RED);
+    for (let i = 0; i < 4; i++) {
+      expect(img.data[i * 4]).toBe(255);
+      expect(img.data[i * 4 + 3]).toBe(255);
+    }
+  });
+
+  it("サイズ0以下は例外", () => {
+    expect(() => createCanvas(0, 5, null)).toThrow();
   });
 });
 

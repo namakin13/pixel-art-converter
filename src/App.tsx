@@ -9,12 +9,15 @@ import { renderToCanvas, loadPixelImageFromBlob, toPngBytes } from "./lib/canvas
 import { COLOR_COUNTS, NAMED_PALETTES } from "./lib/palettes";
 import { exportFileName } from "./lib/io";
 import { Adjustments, NO_ADJUST } from "./lib/adjust";
+import { createCanvas } from "./lib/edit";
 import Editor from "./Editor";
+import Home from "./Home";
 
 const TARGET_WIDTHS = [16, 32, 48, 64, 96, 128, 256];
 const EXPORT_SCALES = [1, 2, 4, 8];
 
 type PaletteMode = "auto" | "named" | "none";
+type View = "home" | "convert";
 
 function Slider({
   label,
@@ -43,6 +46,7 @@ function Slider({
 }
 
 function App() {
+  const [view, setView] = useState<View>("home");
   const [editTarget, setEditTarget] = useState<PixelImage | null>(null);
   const [source, setSource] = useState<PixelImage | null>(null);
   const [sourceName, setSourceName] = useState("pixelart");
@@ -138,9 +142,24 @@ function App() {
     );
   }
 
+  if (view === "home") {
+    return (
+      <Home
+        onConvert={() => setView("convert")}
+        onCreate={(w, h, transparent) => {
+          setSourceName("pixelart");
+          setEditTarget(createCanvas(w, h, transparent ? null : { r: 255, g: 255, b: 255, a: 255 }));
+        }}
+      />
+    );
+  }
+
   return (
     <div className="app">
       <header className="app__header">
+        <button className="btn btn--ghost btn--sm app__home" onClick={() => setView("home")}>
+          ← ホーム
+        </button>
         <h1>ドット絵コンバーター</h1>
         <span className="app__tag">イラスト → ドット絵</span>
       </header>

@@ -1,6 +1,8 @@
 import { PixelImage } from "./types";
 import { fromImageData } from "./convert";
 import { fitWithin, MAX_SOURCE } from "./io";
+import { fitContain } from "./iconize";
+import { encodeIco, IcoEntry } from "./ico";
 
 /**
  * ブラウザの Blob/File から PixelImage を読み込む。
@@ -122,4 +124,36 @@ export async function toPngBytes(img: PixelImage): Promise<Uint8Array> {
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
   if (!blob) throw new Error("PNG への変換に失敗しました");
   return new Uint8Array(await blob.arrayBuffer());
+}
+
+/**
+ * ドット絵を size×size の正方形アイコンに収めた PNG バイト列を返す。
+ * アスペクト比を保って中央寄せし、余白は透明・補間なし。
+ */
+export async function toIconPngBytes(img: PixelImage, size: number): Promise<Uint8Array> {
+  const buf = document.createElement("canvas");
+  buf.width = img.width;
+  buf.height = img.height;
+  buf.getContext("2d")!.putImageData(toImageData(img), 0, 0);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.imageSmoothingEnabled = false;
+  const { drawW, drawH, dx, dy } = fitContain(img.width, img.height, size);
+  ctx.drawImage(buf, dx, dy, drawW, drawH);
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+  if (!blob) throw new Error("アイコンPNGの生成に失敗しました");
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
+/** 指定サイズ群のアイコンを内包する .ico バイト列を生成する。 */
+export async function buildIcoBytes(img: PixelImage, sizes: readonly number[]): Promise<Uint8Array> {
+  const entries: IcoEntry[] = [];
+  for (const s of sizes) {
+    entries.push({ width: s, height: s, png: await toIconPngBytes(img, s) });
+  }
+  return encodeIco(entries);
 }

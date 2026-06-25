@@ -1,8 +1,21 @@
-import { PixelImage, RGBA, getPixel, setPixel } from "./types";
+import { PixelImage, RGBA, createImage, getPixel, setPixel } from "./types";
 
 /** PixelImage を複製する（編集は非破壊で行い、履歴に積めるようにする）。 */
 export function cloneImage(img: PixelImage): PixelImage {
   return { width: img.width, height: img.height, data: new Uint8ClampedArray(img.data) };
+}
+
+/**
+ * 新規作成用の空キャンバスを作る。bg が null なら全透明、
+ * 色を指定するとその色で塗りつぶす。
+ */
+export function createCanvas(width: number, height: number, bg: RGBA | null): PixelImage {
+  if (width < 1 || height < 1) throw new Error("キャンバスサイズは1以上が必要です");
+  const img = createImage(width, height);
+  if (bg && bg.a > 0) {
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) setPixel(img, x, y, bg);
+  }
+  return img;
 }
 
 /** 透明色（消しゴム用）。 */
