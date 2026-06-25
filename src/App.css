@@ -217,6 +217,44 @@ body {
   cursor: not-allowed;
 }
 
+.btn--sm {
+  margin-top: 10px;
+  padding: 7px;
+  font-size: 13px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+.check input {
+  accent-color: var(--accent-2);
+}
+
+.slider {
+  margin-bottom: 12px;
+}
+.slider__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.slider__val {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.slider input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent-2);
+}
+
 .msg {
   font-size: 13px;
   padding: 8px 10px;

@@ -1,6 +1,8 @@
 import { PixelImage, RGBA, createImage } from "./types";
 import { pixelate } from "./pixelate";
 import { medianCut, applyPalette } from "./quantize";
+import { ditherFloydSteinberg } from "./dither";
+import { Adjustments, applyAdjustments, isIdentity } from "./adjust";
 
 export interface ConvertOptions {
   /** 出力の横ドット数。 */
@@ -15,6 +17,10 @@ export interface ConvertOptions {
     | { kind: "auto"; colors: number }
     | { kind: "fixed"; colors: RGBA[] }
     | { kind: "none" };
+  /** 減色時に Floyd–Steinberg ディザリングを使うか。 */
+  dither?: boolean;
+  /** ピクセル化前に適用する明度・コントラスト・彩度補正。 */
+  adjustments?: Adjustments;
 }
 
 export interface ConvertResult {
@@ -23,9 +29,13 @@ export interface ConvertResult {
   palette: RGBA[];
 }
 
-/** ピクセル化→減色を通して変換する。 */
+/** 補正→ピクセル化→減色(任意でディザ)を通して変換する。 */
 export function convert(src: PixelImage, options: ConvertOptions): ConvertResult {
-  const pixelated = pixelate(src, options.targetWidth);
+  const adjusted =
+    options.adjustments && !isIdentity(options.adjustments)
+      ? applyAdjustments(src, options.adjustments)
+      : src;
+  const pixelated = pixelate(adjusted, options.targetWidth);
 
   if (options.palette.kind === "none") {
     return { image: pixelated, palette: [] };
@@ -41,7 +51,10 @@ export function convert(src: PixelImage, options: ConvertOptions): ConvertResult
     return { image: pixelated, palette: [] };
   }
 
-  return { image: applyPalette(pixelated, palette), palette };
+  const image = options.dither
+    ? ditherFloydSteinberg(pixelated, palette)
+    : applyPalette(pixelated, palette);
+  return { image, palette };
 }
 
 /**

@@ -8,11 +8,38 @@ import { convert, scaleNearest } from "./lib/convert";
 import { renderToCanvas, loadPixelImageFromBlob, toPngBytes } from "./lib/canvas";
 import { COLOR_COUNTS, NAMED_PALETTES } from "./lib/palettes";
 import { exportFileName } from "./lib/io";
+import { Adjustments, NO_ADJUST } from "./lib/adjust";
 
 const TARGET_WIDTHS = [16, 32, 48, 64, 96, 128, 256];
 const EXPORT_SCALES = [1, 2, 4, 8];
 
 type PaletteMode = "auto" | "named" | "none";
+
+function Slider({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="slider">
+      <div className="slider__head">
+        <span>{label}</span>
+        <span className="slider__val">{value > 0 ? `+${value}` : value}</span>
+      </div>
+      <input
+        type="range"
+        min={-100}
+        max={100}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+      />
+    </div>
+  );
+}
 
 function App() {
   const [source, setSource] = useState<PixelImage | null>(null);
@@ -26,6 +53,8 @@ function App() {
   const [paletteMode, setPaletteMode] = useState<PaletteMode>("auto");
   const [colorCount, setColorCount] = useState(32);
   const [namedPaletteId, setNamedPaletteId] = useState(NAMED_PALETTES[0].id);
+  const [dither, setDither] = useState(false);
+  const [adjust, setAdjust] = useState<Adjustments>(NO_ADJUST);
   const [exportScale, setExportScale] = useState(4);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -33,15 +62,16 @@ function App() {
   // 変換結果（設定が変わるたび再計算）
   const result = useMemo(() => {
     if (!source) return null;
+    const base = { targetWidth, dither, adjustments: adjust };
     if (paletteMode === "none") {
-      return convert(source, { targetWidth, palette: { kind: "none" } });
+      return convert(source, { ...base, palette: { kind: "none" } });
     }
     if (paletteMode === "named") {
       const p = NAMED_PALETTES.find((x) => x.id === namedPaletteId)!;
-      return convert(source, { targetWidth, palette: { kind: "fixed", colors: p.colors } });
+      return convert(source, { ...base, palette: { kind: "fixed", colors: p.colors } });
     }
-    return convert(source, { targetWidth, palette: { kind: "auto", colors: colorCount } });
-  }, [source, targetWidth, paletteMode, colorCount, namedPaletteId]);
+    return convert(source, { ...base, palette: { kind: "auto", colors: colorCount } });
+  }, [source, targetWidth, paletteMode, colorCount, namedPaletteId, dither, adjust]);
 
   // プレビュー描画（表示はキャンバス幅 ~512px を目安にフィット）
   useEffect(() => {
@@ -214,6 +244,35 @@ function App() {
                 ))}
               </select>
             )}
+
+            {paletteMode !== "none" && (
+              <label className="check">
+                <input type="checkbox" checked={dither} onChange={(e) => setDither(e.target.checked)} />
+                ディザリング（誤差拡散）
+              </label>
+            )}
+          </section>
+
+          <section className="panel__group">
+            <h2>画像補正</h2>
+            <Slider
+              label="明度"
+              value={adjust.brightness}
+              onChange={(v) => setAdjust((a) => ({ ...a, brightness: v }))}
+            />
+            <Slider
+              label="コントラスト"
+              value={adjust.contrast}
+              onChange={(v) => setAdjust((a) => ({ ...a, contrast: v }))}
+            />
+            <Slider
+              label="彩度"
+              value={adjust.saturation}
+              onChange={(v) => setAdjust((a) => ({ ...a, saturation: v }))}
+            />
+            <button className="btn btn--ghost btn--sm" onClick={() => setAdjust(NO_ADJUST)}>
+              補正をリセット
+            </button>
           </section>
 
           <section className="panel__group">

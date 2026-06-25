@@ -48,6 +48,32 @@ describe("convert", () => {
       expect(colorDistanceSq(c, green)).toBe(0);
     }
   });
+
+  it("dither 指定でも全ピクセルがパレット内の色になる", () => {
+    const black: RGBA = { r: 0, g: 0, b: 0, a: 255 };
+    const white: RGBA = { r: 255, g: 255, b: 255, a: 255 };
+    const out = convert(checker(), {
+      targetWidth: 4,
+      palette: { kind: "fixed", colors: [black, white] },
+      dither: true,
+    });
+    for (let i = 0; i < out.image.width * out.image.height; i++) {
+      const r = out.image.data[i * 4];
+      expect(r === 0 || r === 255).toBe(true);
+    }
+  });
+
+  it("彩度-100の補正を挟むと出力がグレースケールになる", () => {
+    const out = convert(checker(), {
+      targetWidth: 4,
+      palette: { kind: "none" },
+      adjustments: { brightness: 0, contrast: 0, saturation: -100 },
+    });
+    for (let i = 0; i < out.image.width * out.image.height; i++) {
+      expect(out.image.data[i * 4]).toBe(out.image.data[i * 4 + 1]);
+      expect(out.image.data[i * 4 + 1]).toBe(out.image.data[i * 4 + 2]);
+    }
+  });
 });
 
 describe("scaleNearest", () => {
