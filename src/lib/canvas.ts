@@ -64,6 +64,55 @@ export function renderToCanvas(canvas: HTMLCanvasElement, img: PixelImage, displ
   ctx.drawImage(buf, 0, 0, canvas.width, canvas.height);
 }
 
+/**
+ * エディタ用にドット絵を表示する。透過チェッカー背景＋任意でグリッド線を描く。
+ * scale は 1ドットあたりの画面ピクセル数。
+ */
+export function renderEditor(
+  canvas: HTMLCanvasElement,
+  img: PixelImage,
+  scale: number,
+  showGrid: boolean,
+): void {
+  canvas.width = img.width * scale;
+  canvas.height = img.height * scale;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas コンテキストを取得できません");
+
+  // 透過チェッカー背景
+  const cell = Math.max(4, Math.floor(scale / 2));
+  for (let y = 0; y < canvas.height; y += cell) {
+    for (let x = 0; x < canvas.width; x += cell) {
+      ctx.fillStyle = ((x / cell + y / cell) & 1) === 0 ? "#2a2e3a" : "#20242e";
+      ctx.fillRect(x, y, cell, cell);
+    }
+  }
+
+  // ドット本体（補間なし）
+  const buf = document.createElement("canvas");
+  buf.width = img.width;
+  buf.height = img.height;
+  buf.getContext("2d")!.putImageData(toImageData(img), 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(buf, 0, 0, canvas.width, canvas.height);
+
+  // グリッド線
+  if (showGrid && scale >= 6) {
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x <= img.width; x++) {
+      ctx.moveTo(x * scale + 0.5, 0);
+      ctx.lineTo(x * scale + 0.5, canvas.height);
+    }
+    for (let y = 0; y <= img.height; y++) {
+      ctx.moveTo(0, y * scale + 0.5);
+      ctx.lineTo(canvas.width, y * scale + 0.5);
+    }
+    ctx.stroke();
+  }
+}
+
 /** PixelImage を PNG のバイト列に変換する。 */
 export async function toPngBytes(img: PixelImage): Promise<Uint8Array> {
   const canvas = document.createElement("canvas");

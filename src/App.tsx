@@ -9,6 +9,7 @@ import { renderToCanvas, loadPixelImageFromBlob, toPngBytes } from "./lib/canvas
 import { COLOR_COUNTS, NAMED_PALETTES } from "./lib/palettes";
 import { exportFileName } from "./lib/io";
 import { Adjustments, NO_ADJUST } from "./lib/adjust";
+import Editor from "./Editor";
 
 const TARGET_WIDTHS = [16, 32, 48, 64, 96, 128, 256];
 const EXPORT_SCALES = [1, 2, 4, 8];
@@ -42,6 +43,7 @@ function Slider({
 }
 
 function App() {
+  const [editTarget, setEditTarget] = useState<PixelImage | null>(null);
   const [source, setSource] = useState<PixelImage | null>(null);
   const [sourceName, setSourceName] = useState("pixelart");
   const [dragging, setDragging] = useState(false);
@@ -129,6 +131,12 @@ function App() {
       setError(e instanceof Error ? e.message : String(e));
     }
   }, [result, exportScale, sourceName]);
+
+  if (editTarget) {
+    return (
+      <Editor initial={editTarget} baseName={sourceName} onBack={() => setEditTarget(null)} />
+    );
+  }
 
   return (
     <div className="app">
@@ -290,6 +298,13 @@ function App() {
             </div>
             <button className="btn btn--primary" onClick={onExport} disabled={!result}>
               PNGで書き出し
+            </button>
+            <button
+              className="btn btn--ghost btn--sm"
+              onClick={() => result && setEditTarget(result.image)}
+              disabled={!result}
+            >
+              このドット絵を編集
             </button>
           </section>
 
