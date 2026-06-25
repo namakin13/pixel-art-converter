@@ -98,6 +98,20 @@ function App() {
     }
   }, []);
 
+  // クリップボードからの貼り付け（Ctrl+V）
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.type.startsWith("image/"));
+      const file = item?.getAsFile();
+      if (file) {
+        e.preventDefault();
+        handleFile(file, "pasted");
+      }
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [handleFile]);
+
   const onPick = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const f = e.target.files?.[0];
@@ -181,7 +195,7 @@ function App() {
               <div className="dropzone__inner">
                 <div className="dropzone__icon">🖼️</div>
                 <p>画像をドラッグ＆ドロップ</p>
-                <p className="dropzone__sub">またはクリックしてファイルを選択</p>
+                <p className="dropzone__sub">クリックして選択 / Ctrl+V で貼り付け</p>
               </div>
             </label>
           ) : (

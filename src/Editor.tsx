@@ -11,6 +11,8 @@ import { scaleNearest } from "./lib/convert";
 import { exportFileName } from "./lib/io";
 import { NAMED_PALETTES } from "./lib/palettes";
 import { ICON_SIZES } from "./lib/ico";
+import { flipHorizontal, flipVertical, rotateCW, rotateCCW } from "./lib/transform";
+import { MirrorMode, mirrorSegments } from "./lib/mirror";
 
 type Tool = "pen" | "eraser" | "bucket" | "eyedropper";
 
@@ -40,6 +42,7 @@ export default function Editor({
 }) {
   const [history, setHistory] = useState<History<PixelImage>>(() => createHistory(initial));
   const [tool, setTool] = useState<Tool>("pen");
+  const [mirror, setMirror] = useState<MirrorMode>("none");
   const [color, setColor] = useState<RGBA>(SWATCHES[0]);
   const [scale, setScale] = useState(() => fitScale(initial.width, initial.height, 480));
   const [showGrid, setShowGrid] = useState(true);
@@ -72,6 +75,18 @@ export default function Editor({
     [scale],
   );
 
+  // ミラーを考慮して1ストローク分の線を引く（鏡像も同時に描く）
+  const strokeSegment = useCallback(
+    (img: PixelImage, x0: number, y0: number, x1: number, y1: number, paint: RGBA): PixelImage => {
+      let cur = img;
+      for (const s of mirrorSegments(x0, y0, x1, y1, img.width, img.height, mirror)) {
+        cur = drawLine(cur, s.x0, s.y0, s.x1, s.y1, paint);
+      }
+      return cur;
+    },
+    [mirror],
+  );
+
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       const { x, y } = cellFromEvent(e);
@@ -89,12 +104,12 @@ export default function Editor({
       (e.target as Element).setPointerCapture(e.pointerId);
       drawingRef.current = true;
       const paint = tool === "eraser" ? TRANSPARENT : color;
-      const draft = drawLine(cloneImage(image), x, y, x, y, paint);
+      const draft = strokeSegment(cloneImage(image), x, y, x, y, paint);
       draftRef.current = draft;
       lastCellRef.current = { x, y };
       render(draft);
     },
-    [cellFromEvent, image, tool, color, render],
+    [cellFromEvent, image, tool, color, render, strokeSegment],
   );
 
   const onPointerMove = useCallback(
@@ -104,12 +119,12 @@ export default function Editor({
       const last = lastCellRef.current!;
       if (x === last.x && y === last.y) return;
       const paint = tool === "eraser" ? TRANSPARENT : color;
-      const draft = drawLine(draftRef.current, last.x, last.y, x, y, paint);
+      const draft = strokeSegment(draftRef.current, last.x, last.y, x, y, paint);
       draftRef.current = draft;
       lastCellRef.current = { x, y };
       render(draft);
     },
-    [cellFromEvent, tool, color, render],
+    [cellFromEvent, tool, color, render, strokeSegment],
   );
 
   const endStroke = useCallback(() => {
@@ -167,6 +182,10 @@ export default function Editor({
       setStatus(err instanceof Error ? err.message : String(err));
     }
   }, [image, baseName]);
+
+  const applyTransform = useCallback((fn: (img: PixelImage) => PixelImage) => {
+    setHistory((h) => commit(h, fn(h.present)));
+  }, []);
 
   const tools: { id: Tool; label: string; icon: string }[] = useMemo(
     () => [
@@ -240,6 +259,34 @@ export default function Editor({
                   title={toHex(c)}
                 />
               ))}
+            </div>
+          </section>
+
+          <section className="panel__group">
+            <h2>ミラー描画</h2>
+            <div className="seg">
+              <button className={mirror === "none" ? "seg--on" : ""} onClick={() => setMirror("none")}>
+                なし
+              </button>
+              <button className={mirror === "horizontal" ? "seg--on" : ""} onClick={() => setMirror("horizontal")}>
+                左右
+              </button>
+              <button className={mirror === "vertical" ? "seg--on" : ""} onClick={() => setMirror("vertical")}>
+                上下
+              </button>
+              <button className={mirror === "both" ? "seg--on" : ""} onClick={() => setMirror("both")}>
+                4方向
+              </button>
+            </div>
+          </section>
+
+          <section className="panel__group">
+            <h2>変形</h2>
+            <div className="chips">
+              <button className="chip" onClick={() => applyTransform(flipHorizontal)}>左右反転</button>
+              <button className="chip" onClick={() => applyTransform(flipVertical)}>上下反転</button>
+              <button className="chip" onClick={() => applyTransform(rotateCCW)}>⟲ 左回転</button>
+              <button className="chip" onClick={() => applyTransform(rotateCW)}>⟳ 右回転</button>
             </div>
           </section>
 
