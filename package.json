@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "gen-icon": "node scripts/gen-icon.mjs",
     "tauri": "tauri"
   },
   "dependencies": {

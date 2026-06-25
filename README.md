@@ -19,8 +19,18 @@
 
 ```bash
 npm install
+npm run test         # 単体テスト(Vitest)
 npm run tauri dev    # 開発用にアプリを起動
-npm run tauri build  # 配布用ビルド
+npm run gen-icon     # アプリアイコン(assets/app-icon.png)を再生成
+npm run tauri build  # 配布用ビルド（NSISインストーラー生成）
+```
+
+## インストーラー
+
+`npm run tauri build` を実行すると、Windows用インストーラーが以下に生成されます。
+
+```
+src-tauri/target/release/bundle/nsis/ドット絵コンバーター_<version>_x64-setup.exe
 ```
 
 ## ライセンス
