@@ -142,6 +142,8 @@ export default function Editor({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey)) return;
+      // ストローク描画中は Undo/Redo を無視（確定前の draft を壊さないため）
+      if (drawingRef.current) return;
       if (e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         setHistory((h) => undo(h));

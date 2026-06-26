@@ -106,6 +106,7 @@ function App() {
       const file = item?.getAsFile();
       if (file) {
         e.preventDefault();
+        setView("convert"); // ホーム画面からの貼り付けでも結果が見えるようにする
         handleFile(file, "pasted");
       }
     };
