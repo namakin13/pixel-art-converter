@@ -72,7 +72,8 @@ export function mirrorSegments(
     const a = tf({ x: x0, y: y0 });
     const b = tf({ x: x1, y: y1 });
     const key = `${a.x},${a.y},${b.x},${b.y}`;
-    if (seen.has(key)) continue;
+    const keyRev = `${b.x},${b.y},${a.x},${a.y}`;
+    if (seen.has(key) || seen.has(keyRev)) continue;
     seen.add(key);
     out.push({ x0: a.x, y0: a.y, x1: b.x, y1: b.y });
   }

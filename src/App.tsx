@@ -98,8 +98,9 @@ function App() {
     }
   }, []);
 
-  // クリップボードからの貼り付け（Ctrl+V）
+  // クリップボードからの貼り付け（Ctrl+V）。エディタ表示中は無効にする
   useEffect(() => {
+    if (editTarget) return;
     const onPaste = (e: ClipboardEvent) => {
       const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.type.startsWith("image/"));
       const file = item?.getAsFile();
@@ -110,7 +111,7 @@ function App() {
     };
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
-  }, [handleFile]);
+  }, [handleFile, editTarget]);
 
   const onPick = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

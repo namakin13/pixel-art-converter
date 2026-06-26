@@ -93,7 +93,9 @@ export default function Editor({
       if (!inBounds(x, y, image.width, image.height)) return;
 
       if (tool === "eyedropper") {
-        setColor(pickColor(image, x, y));
+        const picked = pickColor(image, x, y);
+        if (picked.a > 0) setColor(picked);
+        setTool("pen");
         return;
       }
       if (tool === "bucket") {
@@ -217,10 +219,10 @@ export default function Editor({
           ))}
         </div>
         <div className="editor__hist">
-          <button className="btn btn--sm" disabled={!canUndo(history)} onClick={() => setHistory(undo(history))}>
+          <button className="btn btn--sm" disabled={!canUndo(history)} onClick={() => setHistory((h) => undo(h))}>
             ↶ 元に戻す
           </button>
-          <button className="btn btn--sm" disabled={!canRedo(history)} onClick={() => setHistory(redo(history))}>
+          <button className="btn btn--sm" disabled={!canRedo(history)} onClick={() => setHistory((h) => redo(h))}>
             ↷ やり直し
           </button>
         </div>

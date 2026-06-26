@@ -55,9 +55,9 @@ describe("rotateCW", () => {
 });
 
 describe("rotateCCW", () => {
-  it("反時計回り90度: 右上Bが右下へ", () => {
+  it("反時計回り90度: 右上Bが左上へ", () => {
     const out = rotateCCW(quad());
-    // B(右上)→右下, A(左上)→左下... 逆回転
+    // B(右上)→左上, A(左上)→左下
     expect(getPixel(out, 0, 0)).toEqual(B);
     expect(getPixel(out, 1, 0)).toEqual(D);
     expect(getPixel(out, 0, 1)).toEqual(A);
