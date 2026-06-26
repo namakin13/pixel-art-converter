@@ -62,8 +62,10 @@ function App() {
   const [dither, setDither] = useState(false);
   const [adjust, setAdjust] = useState<Adjustments>(NO_ADJUST);
   const [exportScale, setExportScale] = useState(4);
+  const [exported, setExported] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const srcCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // 変換結果（設定が変わるたび再計算）
   const result = useMemo(() => {
@@ -86,12 +88,19 @@ function App() {
     renderToCanvas(canvasRef.current, result.image, Math.min(fit, 16));
   }, [result]);
 
+  // 元画像サムネイル描画
+  useEffect(() => {
+    if (!source || !srcCanvasRef.current) return;
+    renderToCanvas(srcCanvasRef.current, source, 1);
+  }, [source]);
+
   const handleFile = useCallback(async (file: Blob, name: string) => {
     try {
       setError(null);
       const img = await loadPixelImageFromBlob(file);
       setSource(img);
       setSourceName(name.replace(/\.[^.]+$/, "") || "pixelart");
+      setExported(false);
       setStatus(`読み込み完了: ${img.width}×${img.height}px`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -146,6 +155,7 @@ function App() {
       });
       if (!path) return;
       await writeFile(path, bytes);
+      setExported(true);
       setStatus(`書き出し完了: ${path}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -170,15 +180,28 @@ function App() {
     );
   }
 
+  const currentStep = !source ? 1 : exported ? 3 : 2;
+
   return (
     <div className="app">
-      <header className="app__header">
-        <button className="btn btn--ghost btn--sm app__home" onClick={() => setView("home")}>
-          ← ホーム
+      <header className="titlebar">
+        <button className="btn titlebar__home" onClick={() => setView("home")}>
+          ◀ HOME
         </button>
-        <h1>ドット絵コンバーター</h1>
-        <span className="app__tag">イラスト → ドット絵</span>
+        <span className="titlebar__label">CONVERT</span>
       </header>
+
+      <div className="stepbar">
+        <span className={`step ${currentStep > 1 ? "step--done" : currentStep === 1 ? "step--current" : ""}`}>
+          1 よみこみ
+        </span>
+        <span className="step__sep">▸</span>
+        <span className={`step ${currentStep > 2 ? "step--done" : currentStep === 2 ? "step--current" : ""}`}>
+          2 せってい
+        </span>
+        <span className="step__sep">▸</span>
+        <span className={`step ${currentStep === 3 ? "step--current" : ""}`}>3 かきだし</span>
+      </div>
 
       <div className="app__body">
         {/* 左: 入力 / プレビュー */}
@@ -202,7 +225,7 @@ function App() {
             </label>
           ) : (
             <div
-              className="canvas-wrap"
+              className="convert-preview"
               onDragOver={(e) => {
                 e.preventDefault();
                 setDragging(true);
@@ -210,13 +233,20 @@ function App() {
               onDragLeave={() => setDragging(false)}
               onDrop={onDrop}
             >
-              <canvas ref={canvasRef} className="preview__canvas" />
-              {result && (
-                <div className="preview__meta">
-                  出力: {result.image.width}×{result.image.height}px
-                  {result.palette.length > 0 && ` / ${result.palette.length}色`}
-                </div>
-              )}
+              <label title="画像を選び直す">
+                <input type="file" accept="image/*" onChange={onPick} hidden />
+                <canvas ref={srcCanvasRef} className="preview__src" />
+              </label>
+              <span className="preview__arrow">▶</span>
+              <div className="preview__result-wrap">
+                <canvas ref={canvasRef} className="preview__canvas" />
+                {result && (
+                  <div className="preview__meta">
+                    OUT {result.image.width}x{result.image.height}
+                    {result.palette.length > 0 && ` / ${result.palette.length}col`}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </main>
@@ -224,15 +254,7 @@ function App() {
         {/* 右: 設定 */}
         <aside className="panel">
           <section className="panel__group">
-            <h2>入力</h2>
-            <label className="btn btn--ghost">
-              <input type="file" accept="image/*" onChange={onPick} hidden />
-              画像を選択…
-            </label>
-          </section>
-
-          <section className="panel__group">
-            <h2>解像度（横ドット数）</h2>
+            <h2>RESOLUTION</h2>
             <div className="chips">
               {TARGET_WIDTHS.map((w) => (
                 <button
@@ -247,7 +269,7 @@ function App() {
           </section>
 
           <section className="panel__group">
-            <h2>パレット</h2>
+            <h2>PALETTE</h2>
             <div className="seg">
               <button className={paletteMode === "auto" ? "seg--on" : ""} onClick={() => setPaletteMode("auto")}>
                 自動減色
@@ -297,7 +319,7 @@ function App() {
           </section>
 
           <section className="panel__group">
-            <h2>画像補正</h2>
+            <h2>ADJUST</h2>
             <Slider
               label="明度"
               value={adjust.brightness}
@@ -319,7 +341,7 @@ function App() {
           </section>
 
           <section className="panel__group">
-            <h2>書き出し</h2>
+            <h2>EXPORT</h2>
             <div className="chips">
               {EXPORT_SCALES.map((s) => (
                 <button
@@ -332,14 +354,14 @@ function App() {
               ))}
             </div>
             <button className="btn btn--primary" onClick={onExport} disabled={!result}>
-              PNGで書き出し
+              PNG SAVE
             </button>
             <button
               className="btn btn--ghost btn--sm"
               onClick={() => result && setEditTarget(result.image)}
               disabled={!result}
             >
-              このドット絵を編集
+              このドット絵を編集 ▶
             </button>
           </section>
 

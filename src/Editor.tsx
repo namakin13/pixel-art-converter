@@ -204,8 +204,8 @@ export default function Editor({
   return (
     <div className="editor">
       <div className="editor__toolbar">
-        <button className="btn btn--ghost btn--sm editor__back" onClick={onBack}>
-          ← 戻る
+        <button className="btn editor__back" onClick={onBack}>
+          ◀ 戻る
         </button>
         <div className="editor__tools">
           {tools.map((t) => (
@@ -221,11 +221,11 @@ export default function Editor({
           ))}
         </div>
         <div className="editor__hist">
-          <button className="btn btn--sm" disabled={!canUndo(history)} onClick={() => setHistory((h) => undo(h))}>
-            ↶ 元に戻す
+          <button className="btn" title="元に戻す" disabled={!canUndo(history)} onClick={() => setHistory((h) => undo(h))}>
+            ↶
           </button>
-          <button className="btn btn--sm" disabled={!canRedo(history)} onClick={() => setHistory((h) => redo(h))}>
-            ↷ やり直し
+          <button className="btn" title="やり直し" disabled={!canRedo(history)} onClick={() => setHistory((h) => redo(h))}>
+            ↷
           </button>
         </div>
       </div>
@@ -244,7 +244,7 @@ export default function Editor({
 
         <aside className="panel">
           <section className="panel__group">
-            <h2>色</h2>
+            <h2>COLOR</h2>
             <div className="color-row">
               <input
                 type="color"
@@ -267,7 +267,7 @@ export default function Editor({
           </section>
 
           <section className="panel__group">
-            <h2>ミラー描画</h2>
+            <h2>MIRROR</h2>
             <div className="seg">
               <button className={mirror === "none" ? "seg--on" : ""} onClick={() => setMirror("none")}>
                 なし
@@ -285,7 +285,7 @@ export default function Editor({
           </section>
 
           <section className="panel__group">
-            <h2>変形</h2>
+            <h2>TRANSFORM</h2>
             <div className="chips">
               <button className="chip" onClick={() => applyTransform(flipHorizontal)}>左右反転</button>
               <button className="chip" onClick={() => applyTransform(flipVertical)}>上下反転</button>
@@ -295,7 +295,7 @@ export default function Editor({
           </section>
 
           <section className="panel__group">
-            <h2>表示</h2>
+            <h2>VIEW</h2>
             <div className="zoom-row">
               <button className="btn btn--sm" onClick={() => setScale((s) => Math.max(1, s - 1))}>
                 −
@@ -312,7 +312,7 @@ export default function Editor({
           </section>
 
           <section className="panel__group">
-            <h2>書き出し</h2>
+            <h2>EXPORT</h2>
             <div className="chips">
               {[1, 2, 4, 8].map((s) => (
                 <button
@@ -325,7 +325,7 @@ export default function Editor({
               ))}
             </div>
             <button className="btn btn--primary" onClick={onExport}>
-              PNGで書き出し
+              PNG SAVE
             </button>
             <button className="btn btn--ghost btn--sm" onClick={onExportIco}>
               アイコン(.ico)で書き出し

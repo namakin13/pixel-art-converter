@@ -85,7 +85,7 @@ export function renderEditor(
   const cell = Math.max(4, Math.floor(scale / 2));
   for (let y = 0; y < canvas.height; y += cell) {
     for (let x = 0; x < canvas.width; x += cell) {
-      ctx.fillStyle = ((x / cell + y / cell) & 1) === 0 ? "#2a2e3a" : "#20242e";
+      ctx.fillStyle = ((x / cell + y / cell) & 1) === 0 ? "#1c1830" : "#161226";
       ctx.fillRect(x, y, cell, cell);
     }
   }
@@ -100,7 +100,7 @@ export function renderEditor(
 
   // グリッド線
   if (showGrid && scale >= 6) {
-    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.strokeStyle = "rgba(103,232,245,0.1)";
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (let x = 0; x <= img.width; x++) {
