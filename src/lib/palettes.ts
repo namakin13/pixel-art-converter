@@ -27,7 +27,14 @@ export const NAMED_PALETTES: Palette[] = [
     "#000000", "#fcfcfc", "#f8f8f8", "#bcbcbc", "#7c7c7c", "#a4e4fc", "#3cbcfc", "#0078f8",
     "#0000fc", "#b8b8f8", "#6888fc", "#0058f8", "#0000bc", "#f8b8f8", "#f878f8", "#e40058",
   ]),
+  pal("pop", "POP ビビッド (16)", [
+    "#1a1a2e", "#ffffff", "#ff3b6b", "#ff7b00", "#ffd400", "#8cff32", "#00d9a3", "#00b4ff",
+    "#5e5eff", "#c84bff", "#ff5cc8", "#ff9bb3", "#7be0ff", "#fff07a", "#9b6b3f", "#3a3a5c",
+  ]),
 ];
+
+/** POP変換プリセットで使うパレット ID。 */
+export const POP_PALETTE_ID = "pop";
 
 /** id から有名パレットを取得する。 */
 export function findPalette(id: string): Palette | undefined {

@@ -1,6 +1,6 @@
 [package]
 name = "pixel-art-converter"
-version = "0.3.0"
+version = "0.4.0"
 description = "イラストをドット絵に変換するデスクトップアプリ"
 authors = ["namakin13"]
 edition = "2021"

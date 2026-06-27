@@ -3,6 +3,7 @@ import { pixelate } from "./pixelate";
 import { medianCut, applyPalette } from "./quantize";
 import { ditherFloydSteinberg } from "./dither";
 import { Adjustments, applyAdjustments, isIdentity } from "./adjust";
+import { applyOutline, OutlineOptions } from "./outline";
 
 export interface ConvertOptions {
   /** 出力の横ドット数。 */
@@ -21,6 +22,11 @@ export interface ConvertOptions {
   dither?: boolean;
   /** ピクセル化前に適用する明度・コントラスト・彩度補正。 */
   adjustments?: Adjustments;
+  /**
+   * 減色後にアウトライン（縁取り・輪郭線）を乗せてポップな見た目にする。
+   * 省略時は適用しない。
+   */
+  outline?: OutlineOptions;
 }
 
 export interface ConvertResult {
@@ -36,9 +42,11 @@ export function convert(src: PixelImage, options: ConvertOptions): ConvertResult
       ? applyAdjustments(src, options.adjustments)
       : src;
   const pixelated = pixelate(adjusted, options.targetWidth);
+  const withOutline = (img: PixelImage) =>
+    options.outline ? applyOutline(img, options.outline) : img;
 
   if (options.palette.kind === "none") {
-    return { image: pixelated, palette: [] };
+    return { image: withOutline(pixelated), palette: [] };
   }
 
   const palette =
@@ -48,13 +56,13 @@ export function convert(src: PixelImage, options: ConvertOptions): ConvertResult
 
   if (palette.length === 0) {
     // 全透明などでパレットが作れない場合はピクセル化結果をそのまま返す
-    return { image: pixelated, palette: [] };
+    return { image: withOutline(pixelated), palette: [] };
   }
 
-  const image = options.dither
+  const quantized = options.dither
     ? ditherFloydSteinberg(pixelated, palette)
     : applyPalette(pixelated, palette);
-  return { image, palette };
+  return { image: withOutline(quantized), palette };
 }
 
 /**

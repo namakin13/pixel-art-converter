@@ -6,7 +6,8 @@ import "./App.css";
 import { PixelImage } from "./lib/types";
 import { convert, scaleNearest } from "./lib/convert";
 import { renderToCanvas, loadPixelImageFromBlob, toPngBytes } from "./lib/canvas";
-import { COLOR_COUNTS, NAMED_PALETTES } from "./lib/palettes";
+import { COLOR_COUNTS, NAMED_PALETTES, POP_PALETTE_ID } from "./lib/palettes";
+import { OutlineOptions } from "./lib/outline";
 import { exportFileName } from "./lib/io";
 import { Adjustments, NO_ADJUST } from "./lib/adjust";
 import { createCanvas } from "./lib/edit";
@@ -61,6 +62,7 @@ function App() {
   const [namedPaletteId, setNamedPaletteId] = useState(NAMED_PALETTES[0].id);
   const [dither, setDither] = useState(false);
   const [adjust, setAdjust] = useState<Adjustments>(NO_ADJUST);
+  const [outline, setOutline] = useState<OutlineOptions | null>(null);
   const [exportScale, setExportScale] = useState(4);
   const [exported, setExported] = useState(false);
 
@@ -70,7 +72,7 @@ function App() {
   // 変換結果（設定が変わるたび再計算）
   const result = useMemo(() => {
     if (!source) return null;
-    const base = { targetWidth, dither, adjustments: adjust };
+    const base = { targetWidth, dither, adjustments: adjust, outline: outline ?? undefined };
     if (paletteMode === "none") {
       return convert(source, { ...base, palette: { kind: "none" } });
     }
@@ -79,7 +81,18 @@ function App() {
       return convert(source, { ...base, palette: { kind: "fixed", colors: p.colors } });
     }
     return convert(source, { ...base, palette: { kind: "auto", colors: colorCount } });
-  }, [source, targetWidth, paletteMode, colorCount, namedPaletteId, dither, adjust]);
+  }, [source, targetWidth, paletteMode, colorCount, namedPaletteId, dither, adjust, outline]);
+
+  // POP変換: 彩度・コントラストを強め、ビビッドな限定パレットと縁取りで
+  // デフォルメ風のポップなドット絵にする一括プリセット。
+  const applyPopPreset = useCallback(() => {
+    setTargetWidth(64);
+    setPaletteMode("named");
+    setNamedPaletteId(POP_PALETTE_ID);
+    setDither(false);
+    setAdjust({ brightness: 4, contrast: 22, saturation: 55 });
+    setOutline({ color: { r: 26, g: 26, b: 46, a: 255 }, edgeThreshold: 48, silhouette: true });
+  }, []);
 
   // プレビュー描画（表示はキャンバス幅 ~512px を目安にフィット）
   useEffect(() => {
@@ -253,6 +266,27 @@ function App() {
 
         {/* 右: 設定 */}
         <aside className="panel">
+          <section className="panel__group">
+            <h2>STYLE</h2>
+            <button className="btn btn--primary" onClick={applyPopPreset}>
+              ✦ POP変換
+            </button>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={outline !== null}
+                onChange={(e) =>
+                  setOutline(
+                    e.target.checked
+                      ? { color: { r: 26, g: 26, b: 46, a: 255 }, edgeThreshold: 48, silhouette: true }
+                      : null,
+                  )
+                }
+              />
+              アウトライン（縁取り）
+            </label>
+          </section>
+
           <section className="panel__group">
             <h2>RESOLUTION</h2>
             <div className="chips">
